@@ -95,10 +95,10 @@ if (!isset($pdo)) {
         }
 
         .main-logo {
-            height: 120px;
+            height: 100px;
             width: auto;
             object-fit: contain;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
@@ -113,6 +113,7 @@ if (!isset($pdo)) {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
             background: white;
+            margin-bottom: 0;
         }
 
         .card:hover {
@@ -247,6 +248,20 @@ if (!isset($pdo)) {
             border: none;
         }
 
+        /* Ajustes para eliminar espacios blancos */
+        .py-5 {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+        }
+
+        .mb-5 {
+            margin-bottom: 2rem !important;
+        }
+
+        .mt-5 {
+            margin-top: 2rem !important;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .card-header {
@@ -274,8 +289,17 @@ if (!isset($pdo)) {
             }
             
             .main-logo {
-                height: 100px;
-                margin-bottom: 1rem;
+                height: 80px;
+                margin-bottom: 0.75rem;
+            }
+
+            .py-5 {
+                padding-top: 1.5rem !important;
+                padding-bottom: 1.5rem !important;
+            }
+
+            .mb-5 {
+                margin-bottom: 1.5rem !important;
             }
         }
 
@@ -289,8 +313,25 @@ if (!isset($pdo)) {
             }
             
             .main-logo {
-                height: 80px;
-                margin-bottom: 0.75rem;
+                height: 70px;
+                margin-bottom: 0.5rem;
+            }
+
+            .py-5 {
+                padding-top: 1rem !important;
+                padding-bottom: 1rem !important;
+            }
+
+            .mb-5 {
+                margin-bottom: 1rem !important;
+            }
+
+            .display-4 {
+                font-size: 2rem;
+            }
+
+            .lead {
+                font-size: 1rem;
             }
         }
     </style>
@@ -341,27 +382,27 @@ if (!isset($pdo)) {
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-10">
-                <!-- Header Information -->
-                <div class="text-center mb-5">
+                <!-- Header Information - Compacto -->
+                <div class="text-center mb-4">
                     <!-- Logo principal agregado aquí -->
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGxPXJ3rHcxwz-FWTO6nqLKSvMwogHlgdZIQ&s" 
                          alt="Logo Mototaxis Huanta" 
                          class="main-logo">
-                    <h1 class="display-4 fw-bold text-primary mb-3">Mototaxis Huanta</h1>
-                    <p class="lead text-muted">Sistema de consulta de mototaxis - Búsqueda por número o placa</p>
+                    <h1 class="display-5 fw-bold text-primary mb-2">Mototaxis Huanta</h1>
+                    <p class="lead text-muted mb-0">Sistema de consulta de mototaxis - Búsqueda por número o placa</p>
                 </div>
 
                 <!-- Main Interface -->
-                <div class="row">
+                <div class="row mt-4">
                     <div class="col-md-12">
                         <!-- Card de Búsqueda -->
-                        <div class="card mb-4">
+                        <div class="card mb-3">
                             <div class="card-header">
                                 <h4 class="mb-0"><i class="fas fa-search me-2"></i>Buscar Mototaxi</h4>
                             </div>
                             <div class="card-body">
                                 <!-- Tabs para tipo de búsqueda -->
-                                <ul class="nav nav-tabs search-tabs mb-4" id="searchTabs" role="tablist">
+                                <ul class="nav nav-tabs search-tabs mb-3" id="searchTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="numero-tab" data-bs-toggle="tab" data-bs-target="#numero" type="button" role="tab">
                                             <i class="fas fa-hashtag me-2"></i>Por Número
@@ -426,7 +467,7 @@ if (!isset($pdo)) {
                                 <div id="resultsContent"></div>
                                 
                                 <!-- Acordeón para JSON -->
-                                <div class="mt-4 d-none" id="jsonSection">
+                                <div class="mt-3 d-none" id="jsonSection">
                                     <div class="accordion" id="jsonAccordion">
                                         <div class="accordion-item">
                                             <h2 class="accordion-header">
@@ -450,7 +491,7 @@ if (!isset($pdo)) {
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
+    <footer class="bg-dark text-light py-3 mt-4">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6">
