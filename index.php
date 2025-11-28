@@ -574,14 +574,7 @@ if (!isset($pdo)) {
                                     <th class="text-muted">Nombre Completo:</th>
                                     <td>${mototaxi.nombre_completo}</td>
                                 </tr>
-                                <tr>
-                                    <th class="text-muted">DNI:</th>
-                                    <td><span class="badge bg-info">${mototaxi.dni}</span></td>
-                                </tr>
-                                <tr>
-                                    <th class="text-muted">Dirección:</th>
-                                    <td>${mototaxi.direccion || '<span class="text-muted">No especificado</span>'}</td>
-                                </tr>
+
                             </table>
                         </div>
                         <div class="col-md-6">
@@ -618,20 +611,7 @@ if (!isset($pdo)) {
                             <h6 class="text-primary border-bottom pb-2 mb-3">
                                 <i class="fas fa-cogs me-2"></i>Especificaciones Técnicas
                             </h6>
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <th class="text-muted" style="width: 40%;">Número Motor:</th>
-                                    <td>${mototaxi.numero_motor || '<span class="text-muted">No especificado</span>'}</td>
-                                </tr>
-                                <tr>
-                                    <th class="text-muted">Tipo Motor:</th>
-                                    <td>${mototaxi.tipo_motor || '<span class="text-muted">No especificado</span>'}</td>
-                                </tr>
-                                <tr>
-                                    <th class="text-muted">Serie:</th>
-                                    <td>${mototaxi.serie || '<span class="text-muted">No especificado</span>'}</td>
-                                </tr>
-                            </table>
+
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-primary border-bottom pb-2 mb-3">
