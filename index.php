@@ -217,6 +217,17 @@ if (!isset($pdo)) {
             margin-top: auto !important;
         }
 
+        .search-tabs .nav-link {
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+        }
+
+        .search-tabs .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            border: none;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .card-header {
@@ -284,49 +295,65 @@ if (!isset($pdo)) {
                 <!-- Header Information -->
                 <div class="text-center mb-5">
                     <h1 class="display-4 fw-bold text-primary mb-3">Mototaxis Huanta</h1>
+                    <p class="lead text-muted">Sistema de consulta de mototaxis - Búsqueda por número o placa</p>
                 </div>
 
                 <!-- Main Interface -->
                 <div class="row">
-    <div class="col-md-12">
-        <!-- Card de Búsqueda -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-search me-2"></i>Buscar Mototaxi</h4>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="numeroAsignado" class="form-label">Número de la Mototaxi</label>
-                    <input type="text" class="form-control" id="numeroAsignado" 
-                           placeholder="Ej: 01, 123, ...">
-                    <div class="form-text">
-                        Ingrese el numero de la mototaxi para la busqueda.
-                    </div>
-                </div>
-                <button class="btn btn-primary w-100" id="searchMototaxi">
-                    <i class="fas fa-motorcycle me-2"></i>Buscar Mototaxi
-                </button>
-            </div>
-        </div>
+                    <div class="col-md-12">
+                        <!-- Card de Búsqueda -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4 class="mb-0"><i class="fas fa-search me-2"></i>Buscar Mototaxi</h4>
+                            </div>
+                            <div class="card-body">
+                                <!-- Tabs para tipo de búsqueda -->
+                                <ul class="nav nav-tabs search-tabs mb-4" id="searchTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="numero-tab" data-bs-toggle="tab" data-bs-target="#numero" type="button" role="tab">
+                                            <i class="fas fa-hashtag me-2"></i>Por Número
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="placa-tab" data-bs-toggle="tab" data-bs-target="#placa" type="button" role="tab">
+                                            <i class="fas fa-car me-2"></i>Por Placa
+                                        </button>
+                                    </li>
+                                </ul>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const inputNumero = document.getElementById('numeroAsignado');
-    
-    inputNumero.addEventListener('input', function(e) {
-        // Remover cualquier caracter que no sea número o guión
-        this.value = this.value.replace(/[^0-9\-]/g, '');
-    });
-    
-    inputNumero.addEventListener('keypress', function(e) {
-        // Prevenir la entrada de caracteres no permitidos
-        const char = String.fromCharCode(e.which);
-        if (!/[\d\-]/.test(char)) {
-            e.preventDefault();
-        }
-    });
-});
-</script>
+                                <div class="tab-content" id="searchTabsContent">
+                                    <!-- Búsqueda por número -->
+                                    <div class="tab-pane fade show active" id="numero" role="tabpanel">
+                                        <div class="mb-3">
+                                            <label for="numeroAsignado" class="form-label">Número de la Mototaxi</label>
+                                            <input type="text" class="form-control" id="numeroAsignado" 
+                                                   placeholder="Ej: 1, 01, 123, ..." maxlength="10">
+                                            <div class="form-text">
+                                                Ingrese el número de la mototaxi. Los números del 1 al 9 se normalizan automáticamente (1 → 01).
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary w-100" id="searchByNumber">
+                                            <i class="fas fa-motorcycle me-2"></i>Buscar por Número
+                                        </button>
+                                    </div>
+
+                                    <!-- Búsqueda por placa -->
+                                    <div class="tab-pane fade" id="placa" role="tabpanel">
+                                        <div class="mb-3">
+                                            <label for="placaRodaje" class="form-label">Placa de Rodaje</label>
+                                            <input type="text" class="form-control" id="placaRodaje" 
+                                                   placeholder="Ej: ABC123, ABC-123, ..." maxlength="7">
+                                            <div class="form-text">
+                                                Ingrese la placa de rodaje. Se aceptan formatos con o sin guión (ABC123 o ABC-123).
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary w-100" id="searchByPlaca">
+                                            <i class="fas fa-car me-2"></i>Buscar por Placa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Resultados (inicialmente oculta) -->
                         <div class="card d-none" id="resultsCard">
@@ -350,6 +377,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="accordion" id="jsonAccordion">
                                         <div class="accordion-item">
                                             <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#jsonCollapse">
+                                                    <i class="fas fa-code me-2"></i>Ver Respuesta JSON
+                                                </button>
                                             </h2>
                                             <div id="jsonCollapse" class="accordion-collapse collapse" 
                                                  data-bs-parent="#jsonAccordion">
@@ -394,33 +424,61 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const searchCard = document.getElementById('searchCard');
             const resultsCard = document.getElementById('resultsCard');
             const numeroAsignadoInput = document.getElementById('numeroAsignado');
-            const searchMototaxiBtn = document.getElementById('searchMototaxi');
+            const placaRodajeInput = document.getElementById('placaRodaje');
+            const searchByNumberBtn = document.getElementById('searchByNumber');
+            const searchByPlacaBtn = document.getElementById('searchByPlaca');
             const clearSearchBtn = document.getElementById('clearSearch');
             const loadingElement = document.getElementById('loading');
             const resultsContent = document.getElementById('resultsContent');
             const jsonSection = document.getElementById('jsonSection');
             const jsonResponse = document.getElementById('jsonResponse');
-            const apiStatusBadge = document.getElementById('apiStatusBadge');
-            const tokenStatusBadge = document.getElementById('tokenStatusBadge');
-            const tokensCount = document.getElementById('tokensCount');
 
-            // Verificar estado de la API externa y tokens al cargar la página
-            verificarApiExterna();
-            verificarTokensActivos();
+            // Validación de entrada para número
+            numeroAsignadoInput.addEventListener('input', function(e) {
+                // Permitir solo números y guiones
+                this.value = this.value.replace(/[^0-9\-]/g, '');
+            });
 
-            // Buscar mototaxi
-            searchMototaxiBtn.addEventListener('click', function() {
+            // Validación de entrada para placa
+            placaRodajeInput.addEventListener('input', function(e) {
+                // Permitir letras, números y guiones, convertir a mayúsculas
+                this.value = this.value.replace(/[^A-Za-z0-9\-]/g, '').toUpperCase();
+                
+                // Auto-insertar guión después de 3 caracteres si no existe
+                if (this.value.length === 3 && !this.value.includes('-')) {
+                    this.value = this.value + '-';
+                }
+            });
+
+            // Buscar por número
+            searchByNumberBtn.addEventListener('click', function() {
                 const numero = numeroAsignadoInput.value.trim();
                 
                 if (!numero) {
-                    showAlert('Por favor ingrese un número asignado', 'error');
+                    showAlert('Por favor ingrese un número de mototaxi', 'error');
                     return;
                 }
 
-                searchMototaxi(numero);
+                searchMototaxi('numero', numero);
+            });
+
+            // Buscar por placa
+            searchByPlacaBtn.addEventListener('click', function() {
+                const placa = placaRodajeInput.value.trim();
+                
+                if (!placa) {
+                    showAlert('Por favor ingrese una placa de rodaje', 'error');
+                    return;
+                }
+
+                if (placa.length < 3) {
+                    showAlert('La placa debe tener al menos 3 caracteres', 'error');
+                    return;
+                }
+
+                searchMototaxi('placa', placa);
             });
 
             // Limpiar búsqueda
@@ -428,26 +486,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 resultsCard.classList.add('d-none');
                 jsonSection.classList.add('d-none');
                 numeroAsignadoInput.value = '';
+                placaRodajeInput.value = '';
                 numeroAsignadoInput.focus();
             });
 
-            // Función para buscar mototaxi (sin token)
-            function searchMototaxi(numero) {
-                searchMototaxiBtn.disabled = true;
-                searchMototaxiBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando...';
+            // Función para buscar mototaxi
+            function searchMototaxi(tipo, valor) {
+                const searchBtn = tipo === 'numero' ? searchByNumberBtn : searchByPlacaBtn;
+                
+                searchBtn.disabled = true;
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando...';
                 loadingElement.classList.remove('d-none');
                 resultsCard.classList.remove('d-none');
                 resultsContent.innerHTML = '';
                 jsonSection.classList.add('d-none');
 
-                // NOTA: Ya no se envía el token, el sistema lo maneja automáticamente
-                fetch(`../../api.php?action=buscar&numero=${encodeURIComponent(numero)}`)
+                const params = new URLSearchParams();
+                if (tipo === 'numero') {
+                    params.append('numero', valor);
+                } else {
+                    params.append('placa', valor);
+                }
+
+                fetch(`../../api.php?action=buscar&${params.toString()}`)
                     .then(response => response.json())
                     .then(data => {
                         loadingElement.classList.add('d-none');
                         
                         if (data.success) {
-                            displayMototaxiInfo(data.data, data.metadata.fuente);
+                            displayMototaxiInfo(data.data, data.metadata);
                             // Mostrar JSON en acordeón colapsado
                             jsonResponse.textContent = JSON.stringify(data, null, 2);
                             jsonSection.classList.remove('d-none');
@@ -456,6 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     ${data.message}
+                                    ${data.sugerencia ? `<br><small>${data.sugerencia}</small>` : ''}
                                 </div>
                             `;
                         }
@@ -470,23 +538,30 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                     })
                     .finally(() => {
-                        searchMototaxiBtn.disabled = false;
-                        searchMototaxiBtn.innerHTML = '<i class="fas fa-motorcycle me-2"></i>Buscar Mototaxi';
+                        searchBtn.disabled = false;
+                        searchBtn.innerHTML = tipo === 'numero' ? 
+                            '<i class="fas fa-motorcycle me-2"></i>Buscar por Número' : 
+                            '<i class="fas fa-car me-2"></i>Buscar por Placa';
                     });
             }
 
             // Mostrar información del mototaxi
-            function displayMototaxiInfo(mototaxi, fuente) {
-                const fuenteBadge = fuente === 'API_EXTERNA' ? 
+            function displayMototaxiInfo(mototaxi, metadata) {
+                const fuenteBadge = metadata.fuente === 'API_EXTERNA' ? 
                     '<span class="badge bg-success">API Externa</span>' : 
-                    fuente === 'BD_LOCAL' ? 
+                    metadata.fuente === 'BD_LOCAL' ? 
                     '<span class="badge bg-info">VegetA</span>' :
                     '<span class="badge bg-warning">Datos de Prueba</span>';
+
+                const tipoBusquedaBadge = metadata.tipo_busqueda === 'numero' ? 
+                    '<span class="badge bg-primary">Búsqueda por Número</span>' : 
+                    '<span class="badge bg-secondary">Búsqueda por Placa</span>';
 
                 const infoHtml = `
                     <div class="mb-3">
                         ${fuenteBadge}
-                        <small class="text-muted ms-2">Fuente: ${fuente}</small>
+                        ${tipoBusquedaBadge}
+                        <small class="text-muted ms-2">Fuente: ${metadata.fuente}</small>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
@@ -585,74 +660,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             </table>
                         </div>
                     </div>
+                    
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Búsqueda realizada por ${metadata.tipo_busqueda}: 
+                            <strong>"${metadata.valor_buscado}"</strong>
+                            ${metadata.valor_normalizado && metadata.valor_normalizado !== metadata.valor_buscado ? 
+                                `(normalizado a: "${metadata.valor_normalizado}")` : ''}
+                        </small>
+                    </div>
                 `;
                 
                 resultsContent.innerHTML = infoHtml;
-            }
-
-            // Función para verificar API externa
-            function verificarApiExterna() {
-                fetch('../../api.php?action=verificar_api')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const disponible = data.data.api_externa_disponible;
-                            if (disponible) {
-                                apiStatusBadge.innerHTML = `
-                                    <span class="status-dot online"></span>
-                                    <span>API Externa: En Línea</span>
-                                `;
-                                apiStatusBadge.className = 'api-status online';
-                            } else {
-                                apiStatusBadge.innerHTML = `
-                                    <span class="status-dot offline"></span>
-                                    <span>API Externa: Sin Conexión</span>
-                                `;
-                                apiStatusBadge.className = 'api-status offline';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        apiStatusBadge.innerHTML = `
-                            <span class="status-dot offline"></span>
-                            <span>API Externa: Error</span>
-                        `;
-                        apiStatusBadge.className = 'api-status offline';
-                    });
-            }
-
-            // Función para verificar tokens activos
-            function verificarTokensActivos() {
-                fetch('../../api.php?action=tokens_activos')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const totalTokens = data.data.total_tokens;
-                            tokensCount.textContent = totalTokens;
-                            
-                            if (totalTokens > 0) {
-                                tokenStatusBadge.innerHTML = `
-                                    <span class="status-dot online"></span>
-                                    <span>Tokens: ${totalTokens} Activos</span>
-                                `;
-                                tokenStatusBadge.className = 'api-status online';
-                            } else {
-                                tokenStatusBadge.innerHTML = `
-                                    <span class="status-dot offline"></span>
-                                    <span>Tokens: No Activos</span>
-                                `;
-                                tokenStatusBadge.className = 'api-status offline';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        tokenStatusBadge.innerHTML = `
-                            <span class="status-dot offline"></span>
-                            <span>Tokens: Error</span>
-                        `;
-                        tokenStatusBadge.className = 'api-status offline';
-                        tokensCount.textContent = 'Error';
-                    });
             }
 
             // Función auxiliar para colores
@@ -700,7 +720,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Permitir búsqueda con Enter
             numeroAsignadoInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    searchMototaxiBtn.click();
+                    searchByNumberBtn.click();
+                }
+            });
+
+            placaRodajeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchByPlacaBtn.click();
                 }
             });
         });

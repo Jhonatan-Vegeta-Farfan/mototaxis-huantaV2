@@ -146,7 +146,7 @@ class ApiPublicController {
         }
     }
 
-    // BUSCAR MOTOTAXI POR NÚMERO ASIGNADO (JSON)
+    // BUSCAR MOTOTAXI POR NÚMERO ASIGNADO O PLACA DE RODAJE (JSON)
     public function buscarMototaxi() {
         $this->configurarHeadersJSON();
         
@@ -156,61 +156,121 @@ class ApiPublicController {
         
         try {
             $numero = $_GET['numero'] ?? '';
+            $placa = $_GET['placa'] ?? '';
             
-            if (empty($numero)) {
+            if (empty($numero) && empty($placa)) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Parámetro "numero" requerido para la búsqueda'
+                    'message' => 'Parámetro "numero" o "placa" requerido para la búsqueda'
                 ]);
                 return;
             }
             
             $mototaxi = null;
             $fuente = 'BD_LOCAL';
+            $tipoBusqueda = '';
+            $valorBuscado = '';
             
-            // PRIMERO: API EXTERNA
-            if ($this->externalApiConsumer) {
-                $mototaxiExterno = $this->externalApiConsumer->buscarMototaxiExterno($numero);
+            // Determinar tipo de búsqueda
+            if (!empty($numero)) {
+                $tipoBusqueda = 'numero';
+                $valorBuscado = $numero;
                 
-                if ($mototaxiExterno) {
-                    $mototaxi = $mototaxiExterno;
-                    $fuente = 'API_EXTERNA';
+                // Normalizar número: agregar 0 si es un solo dígito (1-9)
+                $numeroNormalizado = $this->normalizarNumeroMototaxi($numero);
+                
+                // PRIMERO: API EXTERNA
+                if ($this->externalApiConsumer) {
+                    $mototaxiExterno = $this->externalApiConsumer->buscarMototaxiExterno($numeroNormalizado);
                     
-                    echo json_encode([
-                        'success' => true,
-                        'message' => 'Mototaxi encontrado exitosamente en API externa',
-                        'data' => $mototaxi,
-                        'metadata' => [
-                            'fecha_consulta' => date('Y-m-d H:i:s'),
-                            'numero_buscado' => $numero,
-                            'total_resultados' => 1,
-                            'fuente' => $fuente
-                        ]
-                    ], JSON_UNESCAPED_UNICODE);
-                    return;
-                }
-            }
-            
-            // SEGUNDO: Base de datos local
-            if ($this->db) {
-                try {
-                    $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa,
-                                     e.representante_legal as representante_empresa
-                             FROM mototaxis m 
-                             LEFT JOIN empresas e ON m.id_empresa = e.id 
-                             WHERE m.numero_asignado = ?";
-                    
-                    $stmt = $this->db->prepare($query);
-                    $stmt->bindParam(1, $numero);
-                    $stmt->execute();
-                    
-                    $mototaxi = $stmt->fetch(PDO::FETCH_ASSOC);
-                    if ($mototaxi) {
-                        $fuente = 'BD_LOCAL';
+                    if ($mototaxiExterno) {
+                        $mototaxi = $mototaxiExterno;
+                        $fuente = 'API_EXTERNA';
+                        
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'Mototaxi encontrado exitosamente en API externa',
+                            'data' => $mototaxi,
+                            'metadata' => [
+                                'fecha_consulta' => date('Y-m-d H:i:s'),
+                                'numero_buscado' => $numero,
+                                'numero_normalizado' => $numeroNormalizado,
+                                'tipo_busqueda' => $tipoBusqueda,
+                                'total_resultados' => 1,
+                                'fuente' => $fuente
+                            ]
+                        ], JSON_UNESCAPED_UNICODE);
+                        return;
                     }
-                } catch (Exception $e) {
-                    error_log("Error en búsqueda BD: " . $e->getMessage());
+                }
+                
+                // SEGUNDO: Base de datos local
+                if ($this->db) {
+                    try {
+                        // Buscar con número normalizado primero
+                        $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa,
+                                         e.representante_legal as representante_empresa
+                                 FROM mototaxis m 
+                                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                                 WHERE m.numero_asignado = ?";
+                        
+                        $stmt = $this->db->prepare($query);
+                        $stmt->bindParam(1, $numeroNormalizado);
+                        $stmt->execute();
+                        
+                        $mototaxi = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        // Si no se encuentra con número normalizado, buscar con el original
+                        if (!$mototaxi && $numeroNormalizado !== $numero) {
+                            $stmt->bindParam(1, $numero);
+                            $stmt->execute();
+                            $mototaxi = $stmt->fetch(PDO::FETCH_ASSOC);
+                        }
+                        
+                        if ($mototaxi) {
+                            $fuente = 'BD_LOCAL';
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error en búsqueda BD: " . $e->getMessage());
+                    }
+                }
+                
+            } elseif (!empty($placa)) {
+                $tipoBusqueda = 'placa';
+                $valorBuscado = $placa;
+                
+                // Normalizar placa: formatear a 6 caracteres + guión
+                $placaNormalizada = $this->normalizarPlacaRodaje($placa);
+                
+                // PRIMERO: API EXTERNA
+                if ($this->externalApiConsumer) {
+                    // Para búsqueda por placa en API externa, necesitaríamos un endpoint específico
+                    // Por ahora buscamos en BD local
+                }
+                
+                // SEGUNDO: Base de datos local
+                if ($this->db) {
+                    try {
+                        $query = "SELECT m.*, e.razon_social as empresa, e.ruc as ruc_empresa,
+                                         e.representante_legal as representante_empresa
+                                 FROM mototaxis m 
+                                 LEFT JOIN empresas e ON m.id_empresa = e.id 
+                                 WHERE m.placa_rodaje = ? OR m.placa_rodaje = ?";
+                        
+                        $stmt = $this->db->prepare($query);
+                        $stmt->bindParam(1, $placa);
+                        $stmt->bindParam(2, $placaNormalizada);
+                        $stmt->execute();
+                        
+                        $mototaxi = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($mototaxi) {
+                            $fuente = 'BD_LOCAL';
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error en búsqueda BD por placa: " . $e->getMessage());
+                    }
                 }
             }
             
@@ -218,10 +278,20 @@ class ApiPublicController {
             if (!$mototaxi) {
                 $datosPrueba = $this->getDatosPruebaEstaticos();
                 foreach ($datosPrueba as $mt) {
-                    if ($mt['numero_asignado'] === $numero) {
-                        $mototaxi = $mt;
-                        $fuente = 'DATOS_PRUEBA';
-                        break;
+                    if ($tipoBusqueda === 'numero') {
+                        // Buscar con número normalizado y original
+                        if ($mt['numero_asignado'] === $numeroNormalizado || $mt['numero_asignado'] === $numero) {
+                            $mototaxi = $mt;
+                            $fuente = 'DATOS_PRUEBA';
+                            break;
+                        }
+                    } elseif ($tipoBusqueda === 'placa') {
+                        // Buscar con placa normalizada y original
+                        if ($mt['placa_rodaje'] === $placa || $mt['placa_rodaje'] === $placaNormalizada) {
+                            $mototaxi = $mt;
+                            $fuente = 'DATOS_PRUEBA';
+                            break;
+                        }
                     }
                 }
             }
@@ -230,8 +300,10 @@ class ApiPublicController {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Mototaxi no encontrado con el número: ' . $numero,
-                    'sugerencia' => 'Verifique el número e intente nuevamente. Números de ejemplo: MT-001, MT-002, MT-003'
+                    'message' => 'Mototaxi no encontrado' . 
+                                ($tipoBusqueda === 'numero' ? ' con el número: ' . $numero : 
+                                 ($tipoBusqueda === 'placa' ? ' con la placa: ' . $placa : '')),
+                    'sugerencia' => $this->getSugerenciaBusqueda($tipoBusqueda, $valorBuscado)
                 ]);
                 return;
             }
@@ -245,7 +317,9 @@ class ApiPublicController {
                 'data' => $mototaxiFormateado,
                 'metadata' => [
                     'fecha_consulta' => date('Y-m-d H:i:s'),
-                    'numero_buscado' => $numero,
+                    'tipo_busqueda' => $tipoBusqueda,
+                    'valor_buscado' => $valorBuscado,
+                    'valor_normalizado' => $tipoBusqueda === 'numero' ? $this->normalizarNumeroMototaxi($numero) : $this->normalizarPlacaRodaje($placa),
                     'total_resultados' => 1,
                     'fuente' => $fuente
                 ]
@@ -258,6 +332,59 @@ class ApiPublicController {
                 'message' => 'Error en la búsqueda: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Normaliza el número de mototaxi agregando 0 si es necesario
+     */
+    private function normalizarNumeroMototaxi($numero) {
+        // Si es un número del 1 al 9 sin cero, agregar el cero
+        if (preg_match('/^\d{1,2}$/', $numero)) {
+            $numeroInt = intval($numero);
+            if ($numeroInt >= 1 && $numeroInt <= 9) {
+                return '0' . $numero;
+            }
+        }
+        return $numero;
+    }
+
+    /**
+     * Normaliza la placa de rodaje al formato 6 caracteres + guión
+     */
+    private function normalizarPlacaRodaje($placa) {
+        // Remover espacios y convertir a mayúsculas
+        $placa = strtoupper(trim($placa));
+        
+        // Si ya tiene el formato correcto, retornar tal cual
+        if (preg_match('/^[A-Z0-9]{3}-[A-Z0-9]{3}$/', $placa)) {
+            return $placa;
+        }
+        
+        // Si tiene 6 caracteres sin guión, agregar guión en la posición 3
+        if (preg_match('/^[A-Z0-9]{6}$/', $placa)) {
+            return substr($placa, 0, 3) . '-' . substr($placa, 3, 3);
+        }
+        
+        // Si tiene otros formatos, intentar normalizar
+        $placa = preg_replace('/[^A-Z0-9]/', '', $placa); // Remover caracteres no alfanuméricos
+        if (strlen($placa) >= 6) {
+            return substr($placa, 0, 3) . '-' . substr($placa, 3, 3);
+        }
+        
+        // Si no se puede normalizar, retornar original
+        return $placa;
+    }
+
+    /**
+     * Genera sugerencias de búsqueda según el tipo
+     */
+    private function getSugerenciaBusqueda($tipo, $valor) {
+        if ($tipo === 'numero') {
+            return 'Verifique el número e intente nuevamente. Números de ejemplo: 1, 01, 123, MT-001';
+        } elseif ($tipo === 'placa') {
+            return 'Verifique la placa e intente nuevamente. Formatos aceptados: ABC123, ABC-123';
+        }
+        return 'Verifique los datos e intente nuevamente';
     }
 
     // VALIDAR TOKEN (mantenido para compatibilidad)
@@ -466,7 +593,7 @@ class ApiPublicController {
         return [
             [
                 'id' => 1,
-                'numero_asignado' => 'MT-001',
+                'numero_asignado' => '01',
                 'nombre_completo' => 'Juan Pérez García',
                 'dni' => '12345678',
                 'direccion' => 'Av. Principal 123, Huanta',
@@ -489,7 +616,7 @@ class ApiPublicController {
             ],
             [
                 'id' => 2,
-                'numero_asignado' => 'MT-002',
+                'numero_asignado' => '02',
                 'nombre_completo' => 'María López Hernández',
                 'dni' => '87654321',
                 'direccion' => 'Jr. Los Olivos 456, Huanta',
@@ -512,7 +639,7 @@ class ApiPublicController {
             ],
             [
                 'id' => 3,
-                'numero_asignado' => 'MT-003',
+                'numero_asignado' => '03',
                 'nombre_completo' => 'Carlos Ramírez Torres',
                 'dni' => '45678912',
                 'direccion' => 'Av. Libertad 789, Huanta',
@@ -554,10 +681,12 @@ class ApiPublicController {
                 <p>Puede usar los endpoints JSON directamente:</p>
                 <ul>
                     <li><code>/api.php?action=validar_token&token=TOKEN</code></li>
-                    <li><code>/api.php?action=buscar&numero=MT-001</code></li>
+                    <li><code>/api.php?action=buscar&numero=01</code></li>
+                    <li><code>/api.php?action=buscar&placa=ABC-123</code></li>
                     <li><code>/api.php?action=listar&pagina=1</code></li>
                 </ul>
                 <p><strong>Nota:</strong> El sistema ahora usa autenticación automática con tokens de la base de datos.</p>
+                <p><strong>Nuevo:</strong> Búsqueda por número (1-9 sin cero) y por placa de rodaje.</p>
             </div>
         </body>
         </html>';
