@@ -94,6 +94,15 @@ if (!isset($pdo)) {
             border-radius: 4px;
         }
 
+        .main-logo {
+            height: 120px;
+            width: auto;
+            object-fit: contain;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
         .container {
             flex: 1;
         }
@@ -263,6 +272,11 @@ if (!isset($pdo)) {
             .navbar-brand {
                 font-size: 1.1rem;
             }
+            
+            .main-logo {
+                height: 100px;
+                margin-bottom: 1rem;
+            }
         }
 
         @media (max-width: 576px) {
@@ -272,6 +286,11 @@ if (!isset($pdo)) {
             
             .navbar-brand {
                 font-size: 1rem;
+            }
+            
+            .main-logo {
+                height: 80px;
+                margin-bottom: 0.75rem;
             }
         }
     </style>
@@ -324,6 +343,10 @@ if (!isset($pdo)) {
             <div class="col-md-10">
                 <!-- Header Information -->
                 <div class="text-center mb-5">
+                    <!-- Logo principal agregado aquí -->
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGxPXJ3rHcxwz-FWTO6nqLKSvMwogHlgdZIQ&s" 
+                         alt="Logo Mototaxis Huanta" 
+                         class="main-logo">
                     <h1 class="display-4 fw-bold text-primary mb-3">Mototaxis Huanta</h1>
                     <p class="lead text-muted">Sistema de consulta de mototaxis - Búsqueda por número o placa</p>
                 </div>
