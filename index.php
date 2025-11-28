@@ -82,6 +82,16 @@ if (!isset($pdo)) {
         .navbar-brand {
             font-weight: 700;
             font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+            border-radius: 4px;
         }
 
         .container {
@@ -245,6 +255,24 @@ if (!isset($pdo)) {
             .user-info {
                 display: none;
             }
+            
+            .logo-img {
+                height: 35px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .logo-img {
+                height: 30px;
+            }
+            
+            .navbar-brand {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -253,7 +281,9 @@ if (!isset($pdo)) {
     <nav class="navbar navbar-expand-lg navbar-dark navbar-public">
         <div class="container">
             <a class="navbar-brand" href="../../index.php">
-                <i class="fas fa-motorcycle me-2"></i>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGxPXJ3rHcxwz-FWTO6nqLKSvMwogHlgdZIQ&s" 
+                     alt="Logo Mototaxis Huanta" 
+                     class="logo-img">
                 Mototaxis Huanta
             </a>
             
