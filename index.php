@@ -608,9 +608,6 @@ if (!isset($pdo)) {
                     
                     <div class="row mt-4">
                         <div class="col-md-6">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="fas fa-cogs me-2"></i>Especificaciones Técnicas
-                            </h6>
 
                         </div>
                         <div class="col-md-6">
